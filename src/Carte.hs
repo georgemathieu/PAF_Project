@@ -30,6 +30,30 @@ data Carte = Carte {cartel :: Int, -- largeur
                     carteh :: Int, -- hauteur
                     carteContenu :: (M.Map Coord Case)} -- contenu de la carte
 
+-- invariant de la carte, doit etre valide
+carte_inv :: Carte -> Bool
+carte_inv c = 
+  (casesDansRectangle c) && (casesExistent c)
+
+getlh :: Carte -> (Int,Int)
+getlh (Carte l h _) = (l,h)
+
+-- verifie que toutes les cases du rectangle ont une valeur
+casesExistent :: Carte -> Bool
+casesExistent (Carte l h contenu) = casesExistentAux contenu ([(i,j) | i <- [0..(l-1)], j <- [0..(h-1)]]) where
+  casesExistentAux :: M.Map Coord Case -> [(Int,Int)] -> Bool
+  casesExistentAux contenu [] = True
+  casesExistentAux contenu (x:xs) = case M.lookup (C (fst x) (snd x)) contenu of
+    Just c -> casesExistentAux contenu xs
+    Nothing -> False
+
+-- verifie que les cases sont toutes contenues dans le rectangle defini par la hauteur et la largeur
+casesDansRectangle :: Carte -> Bool
+casesDansRectangle (Carte l h contenu) = casesDansRectangleAux $ M.keys contenu where
+  casesDansRectangleAux :: [Coord] -> Bool
+  casesDansRectangleAux [] = True
+  casesDansRectangleAux ((C x y):xs) = if x < l && y < h && x >= 0 && y >= 0 then casesDansRectangleAux xs else False
+
 -- fonction qui gère l'affichage, on reste à qqch de simple pour le moment
 foldCarteAux :: String -> Case -> String
 foldCarteAux s c 
@@ -67,6 +91,7 @@ charToCase c
   | c == 'S' = Sortie
   | otherwise = Other
 
+-- charge une carte a partir d'une chaine de caractere (fichier)
 loadCarte :: String -> Carte
 loadCarte s = readMapInput 0 0 0 0 s M.empty where
       readMapInput :: Int -> Int -> Int -> Int -> String -> M.Map Coord Case -> Carte
@@ -75,10 +100,11 @@ loadCarte s = readMapInput 0 0 0 0 s M.empty where
         | s!!i == '\n' = readMapInput 0 (y+1) (i+1) x s map
         | otherwise = readMapInput (x+1) y (i+1) l s (M.insert (C x y) (charToCase (s!!i)) map)
 
+-- Exception : no parse, use LoadCarte instead
 instance Read Carte where
-    readsPrec _ s = readMapInput 0 0 0 s M.empty where
-      readMapInput :: Int -> Int -> Int -> String -> M.Map Coord Case -> [(Carte, String)]
-      readMapInput x y i s map 
-        | s!!i == '\n' = readMapInput 0 (y+1) (i+1) s (M.insert (C x y) (charToCase (s!!i)) map)
-        | length s == i = [((Carte x y map),"")]
-        | otherwise = readMapInput (x+1) y (i+1) s (M.insert (C x y) (charToCase (s!!i)) map)
+    readsPrec _ s = readMapInput 0 0 0 0 s M.empty where
+      readMapInput :: Int -> Int -> Int -> Int -> String -> M.Map Coord Case -> [(Carte,String)]
+      readMapInput x y i l s map -- largeur, hauteur, index, largeur conserve, carte, map de la carte
+        | length s <= i = [((Carte l y map),"")]
+        | s!!i == '\n' = readMapInput 0 (y+1) (i+1) x s map
+        | otherwise = readMapInput (x+1) y (i+1) l s (M.insert (C x y) (charToCase (s!!i)) map)
