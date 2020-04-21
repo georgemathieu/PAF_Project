@@ -35,10 +35,7 @@ carte_inv :: Carte -> Bool
 carte_inv c = 
   (casesDansRectangle c) && (casesExistent c)
 
-getlh :: Carte -> (Int,Int)
-getlh (Carte l h _) = (l,h)
-
--- verifie que toutes les cases du rectangle ont une valeur
+-- verifie que toutes les cases du rectangle ont une valeur dans la map
 casesExistent :: Carte -> Bool
 casesExistent (Carte l h contenu) = casesExistentAux contenu ([(i,j) | i <- [0..(l-1)], j <- [0..(h-1)]]) where
   casesExistentAux :: M.Map Coord Case -> [(Int,Int)] -> Bool
@@ -100,7 +97,7 @@ loadCarte s = readMapInput 0 0 0 0 s M.empty where
         | s!!i == '\n' = readMapInput 0 (y+1) (i+1) x s map
         | otherwise = readMapInput (x+1) y (i+1) l s (M.insert (C x y) (charToCase (s!!i)) map)
 
--- Exception : no parse, use LoadCarte instead
+-- Exception : no parse, use loadCarte instead
 instance Read Carte where
     readsPrec _ s = readMapInput 0 0 0 0 s M.empty where
       readMapInput :: Int -> Int -> Int -> Int -> String -> M.Map Coord Case -> [(Carte,String)]
