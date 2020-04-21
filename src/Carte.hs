@@ -33,7 +33,65 @@ data Carte = Carte {cartel :: Int, -- largeur
 -- invariant de la carte, doit etre valide
 carte_inv :: Carte -> Bool
 carte_inv c = 
-  (casesDansRectangle c) && (casesExistent c)
+  (casesDansRectangle c) && (casesExistent c) && (uniqueEntree c) && (uniqueSortie c) &&
+  (entoureDeMur c) && (portesEncadres c)
+
+-- verifie que les portes sont entre 2 murs
+portesEncadres :: Carte -> Bool
+portesEncadres (Carte l h contenu) = portesEncadresAux contenu ([(i,j) | i <- [0..(l-1)], j <- [0..(h-1)]]) where
+  portesEncadresAux :: M.Map Coord Case -> [(Int,Int)] -> Bool
+  portesEncadresAux contenu [] = True
+  portesEncadresAux contenu (x:xs) = case M.lookup (C (fst x) (snd x)) contenu of
+    Just c  -- on verifie que la case courrante est une porte, puis que ses cases adjacentes sont des murs
+      | c == (Porte NS Fermee) -> case M.lookup (C ((fst x) + 1) (snd x)) contenu of
+        Just c2
+          | c2 == Mur -> case M.lookup (C ((fst x) - 1) (snd x)) contenu of
+            Just c3
+              | c3 == Mur -> portesEncadresAux contenu xs
+              | otherwise -> False
+            Nothing -> error "case non existante ?? portesEncadresAux"
+          | otherwise -> False
+        Nothing -> error "case non existante ?? portesEncadresAux"
+      | c == (Porte EO Fermee) -> case M.lookup (C (fst x) ((snd x) + 1)) contenu of
+        Just c2
+          | c2 == Mur -> case M.lookup (C (fst x) ((snd x) - 1)) contenu of
+            Just c3
+              | c3 == Mur -> portesEncadresAux contenu xs
+              | otherwise -> False
+            Nothing -> error "case non existante ?? portesEncadresAux"
+          | otherwise -> False
+        Nothing -> error "case non existante ?? portesEncadresAux"
+      | c == (Porte NS Ouverte) -> case M.lookup (C ((fst x) + 1) (snd x)) contenu of
+        Just c2
+          | c2 == Mur -> case M.lookup (C ((fst x) - 1) (snd x)) contenu of
+            Just c3
+              | c3 == Mur -> portesEncadresAux contenu xs
+              | otherwise -> False
+            Nothing -> error "case non existante ?? portesEncadresAux"
+          | otherwise -> False
+        Nothing -> error "case non existante ?? portesEncadresAux"
+      | c == (Porte EO Ouverte) -> case M.lookup (C (fst x) ((snd x) + 1)) contenu of
+        Just c2
+          | c2 == Mur -> case M.lookup (C (fst x) ((snd x) - 1)) contenu of
+            Just c3
+              | c3 == Mur -> portesEncadresAux contenu xs
+              | otherwise -> False
+            Nothing -> error "case non existante ?? portesEncadresAux"
+          | otherwise -> False
+        Nothing -> error "case non existante ?? portesEncadresAux"
+      | otherwise -> portesEncadresAux contenu xs
+    Nothing -> error "case non existante ?? portesEncadresAux"
+
+-- verifie que la carte est entouree de murs
+-- cad toutes les cases avec x=0, y=0, x=largeur, y=hauteur
+entoureDeMur :: Carte -> Bool
+entoureDeMur (Carte l h contenu) = entoureDeMurAux contenu (((,) <$> [0,(l-1)] <*> [0..(h-1)]) ++ ((,) <$> [1..(l-2)] <*> [0,(h-1)])) where
+  entoureDeMurAux :: M.Map Coord Case -> [(Int, Int)] -> Bool
+  entoureDeMurAux contenu [] = True
+  entoureDeMurAux contenu (x:xs) = case M.lookup (C (fst x) (snd x)) contenu of
+    Just c -> if c == Mur then entoureDeMurAux contenu xs else False
+    Nothing -> error "case non existante ?? entoureDeMur"
+
 
 -- verifie que toutes les cases du rectangle ont une valeur dans la map
 casesExistent :: Carte -> Bool
@@ -50,6 +108,27 @@ casesDansRectangle (Carte l h contenu) = casesDansRectangleAux $ M.keys contenu 
   casesDansRectangleAux :: [Coord] -> Bool
   casesDansRectangleAux [] = True
   casesDansRectangleAux ((C x y):xs) = if x < l && y < h && x >= 0 && y >= 0 then casesDansRectangleAux xs else False
+
+-- verifie qu'il n'y a qu'une unique sortie dans la carte
+uniqueSortie :: Carte -> Bool
+uniqueSortie (Carte l h contenu) = uniqueSortieAux contenu ([(i,j) | i <- [0..(l-1)], j <- [0..(h-1)]]) 0 where
+  uniqueSortieAux :: M.Map Coord Case -> [(Int,Int)] -> Int -> Bool
+  uniqueSortieAux contenu [] i = if i == 1 then True else False
+  uniqueSortieAux contenu (x:xs) i = case M.lookup (C (fst x) (snd x)) contenu of
+    Just c -> if c == Sortie then uniqueSortieAux contenu xs (i+1) else uniqueSortieAux contenu xs i
+    Nothing -> error "case non existante ?? uniqueSortie"
+
+-- verifie qu'il n'y a qu'une unique entree dans la carte
+uniqueEntree :: Carte -> Bool
+uniqueEntree (Carte l h contenu) = uniqueEntreeAux contenu ([(i,j) | i <- [0..(l-1)], j <- [0..(h-1)]]) 0 where
+  uniqueEntreeAux :: M.Map Coord Case -> [(Int,Int)] -> Int -> Bool
+  uniqueEntreeAux contenu [] i = if i == 1 then True else False
+  uniqueEntreeAux contenu (x:xs) i = case M.lookup (C (fst x) (snd x)) contenu of
+    Just c -> if c == Sortie then uniqueEntreeAux contenu xs (i+1) else uniqueEntreeAux contenu xs i
+    Nothing -> error "case non existante ?? uniqueEntree"
+
+
+
 
 -- fonction qui gère l'affichage, on reste à qqch de simple pour le moment
 foldCarteAux :: String -> Case -> String
