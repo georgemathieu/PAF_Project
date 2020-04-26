@@ -26,6 +26,14 @@ instance Ord Coord where
     | cy1 > cy2 = False
     | cy1 == cy2 = cx1 < cx2
 
+-- a completer avec d'autres entites pour rajouter du contenu
+data Entite = Vache {idEn :: Int, pv :: Int}
+              | Joueur {idEn :: Int, pv :: Int}
+              deriving (Eq)
+
+-- environnement : position des entites
+data Envi = Envi {contenu_envi :: M.Map Coord [Entite]}
+
 data Carte = Carte {cartel :: Int, -- largeur
                     carteh :: Int, -- hauteur
                     carteContenu :: (M.Map Coord Case)} -- contenu de la carte
@@ -138,21 +146,46 @@ getCaseContent (Carte l h contenu) coord = case M.lookup coord contenu of
   Nothing -> error "case non existante ??"
 
 
+-- precondition avant de modifier une case,
+-- on verifie que la carte est valide
+editCase_pre :: Carte -> Bool
+editCase_pre c = carte_inv c 
+
 -- modifie une case de la carte
 editCase :: Carte -> Coord -> Case -> Carte
-editCase (Carte l h contenu) coord c = (Carte l h $ M.insert coord c contenu)
+editCase carte@(Carte l h contenu) coord c = if editCase_pre carte then (Carte l h $ M.insert coord c contenu) else error "mauvaise carte"
 
+--postcondition apres la modification d'une case,
+-- on verifie que les proprietes propres au contenu
+-- des cases sont encore valides
+editCase_post :: Carte -> Bool
+editCase_post c = (uniqueEntree c) && (uniqueSortie c) && (entoureDeMur c) && (portesEncadres c)
+
+
+-- precondition avant d'ouvrir une porte,
+-- on verifie que la carte est valide
+-- et que la case est une porte
+modifierPorte_pre :: Carte -> Case -> Bool
+modifierPorte_pre carte c = carte_inv carte && (c == (Porte NS Fermee) ||  c == (Porte EO Fermee) ||
+                             c == (Porte NS Ouverte) || c == (Porte EO Ouverte))
 
 -- ouverture et fermeture d'une porte
 modifierPorte :: Carte -> Coord -> Carte
-modifierPorte carte@(Carte l h contenu) coord
-  | c == (Porte NS Fermee) = editCase carte coord (Porte NS Ouverte)
-  | c == (Porte EO Fermee) = editCase carte coord (Porte EO Ouverte)
-  | c == (Porte NS Ouverte) = editCase carte coord (Porte NS Fermee)
-  | c == (Porte EO Ouverte) = editCase carte coord (Porte EO Fermee)
-  | otherwise = carte
+modifierPorte carte@(Carte l h contenu) coord = case modifierPorte_pre carte c of
+  True
+    | c == (Porte NS Fermee) -> editCase carte coord (Porte NS Ouverte)
+    | c == (Porte EO Fermee) -> editCase carte coord (Porte EO Ouverte)
+    | c == (Porte NS Ouverte) -> editCase carte coord (Porte NS Fermee)
+    | c == (Porte EO Ouverte) -> editCase carte coord (Porte EO Fermee)
+    | otherwise -> error "jamais atteint normalement"
+  False -> error "mauvaise carte"
   where
     c = getCaseContent carte coord
+
+-- postcondition apres modification d'une porte,
+-- verifie que la carte est toujours valide apres modification
+modifierPorte_post :: Carte -> Bool
+modifierPorte_post c = carte_inv c
 
 
 -- fonction qui gère l'affichage, on reste à qqch de simple pour le moment

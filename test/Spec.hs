@@ -1,2 +1,7 @@
+import Test.Hspec
+
+import CarteTest as CT
+
 main :: IO ()
-main = putStrLn "Test suite not yet implemented"
+main = hspec $ do
+    CT.invTest
