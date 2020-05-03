@@ -36,6 +36,16 @@ invTest = do
             let carte = loadCarte x
             (show (carte_inv carte)) `shouldBe` "False"
 
+        {- it "solvable correct" $ do
+            x <- readFile "cartes/carte.txt"
+            let carte = loadCarte x
+            (show (isSolvable carte)) `shouldBe` "True" -}
+
+        it "invariant incorrect -> Sortie inaccessible" $ do
+            x <- readFile "cartes/carteUnsolvable.txt"
+            let carte = loadCarte x
+            (show (carte_inv carte)) `shouldBe` "False"
+
 
 editTest = undefined {-do
     describe "edit:Test" $ do

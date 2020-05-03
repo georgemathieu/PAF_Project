@@ -43,7 +43,22 @@ data Carte = Carte {cartel :: Int, -- largeur
 carte_inv :: Carte -> Bool
 carte_inv c = 
   (casesDansRectangle c) && (casesExistent c) && (uniqueEntree c) && (uniqueSortie c) &&
-  (entoureDeMur c) && (portesEncadres c)
+  (entoureDeMur c) && (portesEncadres c) && (isSolvable c)
+
+
+-- verifie que la sortie est accesible depuis l'entree
+isSolvable :: Carte -> Bool
+isSolvable carte = isSolvableAux carte (getEntree carte) where
+  isSolvableAux :: Carte -> Coord -> Bool
+  isSolvableAux carte@(Carte l h contenu) coord@(C x y) 
+    | c == Normal || c == Porte NS Ouverte || c == Porte NS Fermee 
+      || c == Porte EO Ouverte || c == Porte EO Fermee || c == Entree = 
+        isSolvableAux (editCase carte coord Mur) (C (x+1) y) || isSolvableAux (editCase carte coord Mur) (C (x-1) y)
+        || isSolvableAux (editCase carte coord Mur) (C x (y+1)) || isSolvableAux (editCase carte coord Mur) (C x (y-1))
+    | c == Sortie = True
+    | otherwise = False
+    where
+      c = getCaseContent carte coord
 
 
 -- verifie que les portes sont entre 2 murs
@@ -139,8 +154,16 @@ uniqueEntree carte@(Carte l h contenu) = uniqueEntreeAux contenu ([(i,j) | i <- 
     if (getCaseContent carte (C (fst x) (snd x))) == Entree then uniqueEntreeAux contenu xs (i+1) else uniqueEntreeAux contenu xs i
 
 
+-- recupere les coordonnes de l'entree
+getEntree :: Carte -> Coord
+getEntree carte@(Carte l h contenu) = getEntreeAux contenu ([(i,j) | i <- [0..(l-1)], j <- [0..(h-1)]]) where
+  getEntreeAux :: M.Map Coord Case -> [(Int,Int)] -> Coord
+  getEntreeAux contenu [] = error "pas d'entree"
+  getEntreeAux contenu (x:xs) = 
+    if (getCaseContent carte (C (fst x) (snd x))) == Entree then (C (fst x) (snd x)) else getEntreeAux contenu xs
+
 -- recupere le contenu d'une case selon ses coordonees
-getCaseContent :: Carte -> Coord  -> Case
+getCaseContent :: Carte -> Coord -> Case
 getCaseContent (Carte l h contenu) coord = case M.lookup coord contenu of
   Just c -> c
   Nothing -> error "case non existante ??"
@@ -153,7 +176,7 @@ editCase_pre c = carte_inv c
 
 -- modifie une case de la carte
 editCase :: Carte -> Coord -> Case -> Carte
-editCase carte@(Carte l h contenu) coord c = if editCase_pre carte then (Carte l h $ M.insert coord c contenu) else error "mauvaise carte"
+editCase carte@(Carte l h contenu) coord c =  (Carte l h $ M.insert coord c contenu)
 
 --postcondition apres la modification d'une case,
 -- on verifie que les proprietes propres au contenu
@@ -171,14 +194,12 @@ modifierPorte_pre carte c = carte_inv carte && (c == (Porte NS Fermee) ||  c == 
 
 -- ouverture et fermeture d'une porte
 modifierPorte :: Carte -> Coord -> Carte
-modifierPorte carte@(Carte l h contenu) coord = case modifierPorte_pre carte c of
-  True
-    | c == (Porte NS Fermee) -> editCase carte coord (Porte NS Ouverte)
-    | c == (Porte EO Fermee) -> editCase carte coord (Porte EO Ouverte)
-    | c == (Porte NS Ouverte) -> editCase carte coord (Porte NS Fermee)
-    | c == (Porte EO Ouverte) -> editCase carte coord (Porte EO Fermee)
-    | otherwise -> error "jamais atteint normalement"
-  False -> error "mauvaise carte"
+modifierPorte carte@(Carte l h contenu) coord 
+  | c == (Porte NS Fermee) = editCase carte coord (Porte NS Ouverte)
+  | c == (Porte EO Fermee) = editCase carte coord (Porte EO Ouverte)
+  | c == (Porte NS Ouverte) = editCase carte coord (Porte NS Fermee)
+  | c == (Porte EO Ouverte) = editCase carte coord (Porte EO Fermee)
+  | otherwise = error "mauvais input"
   where
     c = getCaseContent carte coord
 
