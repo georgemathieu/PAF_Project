@@ -25,14 +25,7 @@ instance Ord Coord where
     | cy1 < cy2 = True
     | cy1 > cy2 = False
     | cy1 == cy2 = cx1 < cx2
-
--- a completer avec d'autres entites pour rajouter du contenu
-data Entite = Vache {idEn :: Int, pv :: Int}
-              | Joueur {idEn :: Int, pv :: Int}
-              deriving (Eq)
-
--- environnement : position des entites
-data Envi = Envi {contenu_envi :: M.Map Coord [Entite]}
+    
 
 data Carte = Carte {cartel :: Int, -- largeur
                     carteh :: Int, -- hauteur
@@ -258,9 +251,11 @@ loadCarte s = readMapInput 0 0 0 0 s M.empty where
 
 -- Exception : no parse, use loadCarte instead
 instance Read Carte where
-    readsPrec _ s = readMapInput 0 0 0 0 s M.empty where
+    readsPrec _ s = [((loadCarte s), "")]
+      
+      {- readMapInput 0 0 0 0 s M.empty where
       readMapInput :: Int -> Int -> Int -> Int -> String -> M.Map Coord Case -> [(Carte,String)]
       readMapInput x y i l s map -- largeur, hauteur, index, largeur conserve, carte, map de la carte
         | length s <= i = [((Carte l y map),"")]
         | s!!i == '\n' = readMapInput 0 (y+1) (i+1) x s map
-        | otherwise = readMapInput (x+1) y (i+1) l s (M.insert (C x y) (charToCase (s!!i)) map)
+        | otherwise = readMapInput (x+1) y (i+1) l s (M.insert (C x y) (charToCase (s!!i)) map) -}

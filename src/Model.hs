@@ -56,11 +56,11 @@ moveBottomRight gs@(GameState px py _ _ sp) | py < 380 && px < 540 = gs { persoY
 -- déplacements avec ZQSD
 gameStep :: RealFrac a => GameState -> Keyboard -> a -> GameState
 gameStep gstate kbd deltaTime
-  | K.keypressed KeycodeZ kbd && K.keypressed KeycodeQ kbd = moveTopLeft gstate
+  | {-K.keypressed KeycodeZ kbd && K.keypressed KeycodeQ kbd = moveTopLeft gstate
   | K.keypressed KeycodeZ kbd && K.keypressed KeycodeD kbd = moveTopRight gstate
   | K.keypressed KeycodeS kbd && K.keypressed KeycodeQ kbd = moveBottomLeft gstate 
   | K.keypressed KeycodeS kbd && K.keypressed KeycodeD kbd = moveBottomRight gstate
-  | K.keypressed KeycodeZ kbd = moveUp gstate
+  | -} K.keypressed KeycodeZ kbd = moveUp gstate
   | K.keypressed KeycodeQ kbd = moveLeft gstate
   | K.keypressed KeycodeS kbd = moveDown gstate
   | K.keypressed KeycodeD kbd = moveRight gstate
