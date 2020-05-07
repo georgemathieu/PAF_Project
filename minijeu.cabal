@@ -28,6 +28,8 @@ source-repository head
 library
   exposed-modules:
       Carte
+      Environnement
+      Modele
       Keyboard
       Model
       Sprite
@@ -42,6 +44,9 @@ library
     , containers
     , linear
     , random
+    , random-extras
+    , mtl
+    , random-fu
     , hspec
     , sdl2
     , sdl2-image
@@ -60,6 +65,9 @@ executable minijeu-exe
     , linear
     , minijeu
     , random
+    , random-extras
+    , mtl
+    , random-fu
     , hspec
     , sdl2
     , sdl2-image
@@ -70,6 +78,8 @@ test-suite minijeu-test
   main-is: Spec.hs
   other-modules:
       CarteTest
+      EnviTest
+      ModeleTest
       Paths_minijeu
   hs-source-dirs:
       test

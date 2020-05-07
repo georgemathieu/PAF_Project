@@ -17,7 +17,7 @@ data Case = Normal
    | Other
    deriving (Eq)
 
-data Coord = C {cx :: Int, cy :: Int} deriving (Eq)
+data Coord = C {cx :: Int, cy :: Int} deriving (Eq, Show)
 
 -- ordre de la carte, début au nord-ouest, fin sud-est
 instance Ord Coord where
