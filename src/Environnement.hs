@@ -32,7 +32,7 @@ prop_franchissable_pre coord env = caseExiste coord env
 franchissable_env :: Coord -> Envi -> Bool
 franchissable_env coord (Envi contenu_envi) = case M.lookup coord contenu_envi of
   Just listeEntite -> isListeFranchissable listeEntite
-  Nothing -> error "coordonnes non existantes"
+  Nothing -> True
   where
     isListeFranchissable :: [Entite] -> Bool
     isListeFranchissable [] = True

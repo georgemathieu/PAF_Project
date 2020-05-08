@@ -162,6 +162,15 @@ getCaseContent (Carte l h contenu) coord = case M.lookup coord contenu of
   Nothing -> error "case non existante ??"
 
 
+-- verifie si une case est une porte ou un mur
+-- (et donc infranchissable)
+isPorteOuMur :: Carte -> Coord -> Bool
+isPorteOuMur carte coord = if c == (Porte NS Ouverte) || c == (Porte NS Fermee) || c == (Porte EO Ouverte)
+              || c == (Porte EO Fermee) || c == Mur then True else False
+    where
+      c = getCaseContent carte coord
+
+
 -- precondition avant de modifier une case,
 -- on verifie que la carte est valide
 editCase_pre :: Carte -> Bool
